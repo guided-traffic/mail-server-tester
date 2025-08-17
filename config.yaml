@@ -1,16 +1,35 @@
-smtp:
-  server: smtp.example.com
-  port: 587
-  user: user@example.com
-  password: password
+testserver:
+  name: testserver
+  smtp_server: smtp.main.example.com
+  smtp_port: 587
+  smtp_user: user@main.example.com
+  smtp_password: password
+  imap_server: imap.main.example.com
+  imap_port: 993
+  imap_user: user@main.example.com
+  imap_password: password
+  tls: true
+  skip_cert_verify: false
 external_servers:
-  - imap_server: imap1.example.com
+  - name: external1
+    smtp_server: smtp.ext1.example.com
+    smtp_port: 587
+    smtp_user: user@ext1.example.com
+    smtp_password: password1
+    imap_server: imap.ext1.example.com
     imap_port: 993
-    imap_user: external1@example.com
+    imap_user: user@ext1.example.com
     imap_password: password1
-    recipient: external1@example.com
-  - imap_server: imap2.example.com
+    tls: true
+    skip_cert_verify: true
+  - name: external2
+    smtp_server: smtp.ext2.example.com
+    smtp_port: 587
+    smtp_user: user@ext2.example.com
+    smtp_password: password2
+    imap_server: imap.ext2.example.com
     imap_port: 993
-    imap_user: external2@example.com
+    imap_user: user@ext2.example.com
     imap_password: password2
-    recipient: external2@example.com
+    tls: false
+    skip_cert_verify: false

@@ -7,24 +7,23 @@ import (
 )
 
 
-type SMTPConfig struct {
-	Server   string `yaml:"server"`
-	Port     int    `yaml:"port"`
-	User     string `yaml:"user"`
-	Password string `yaml:"password"`
-}
-
-type ExternalServer struct {
-	IMAPServer   string `yaml:"imap_server"`
-	IMAPPort     int    `yaml:"imap_port"`
-	IMAPUser     string `yaml:"imap_user"`
-	IMAPPassword string `yaml:"imap_password"`
-	Recipient    string `yaml:"recipient"`
+type ServerConfig struct {
+	Name            string `yaml:"name"`
+	SMTPServer      string `yaml:"smtp_server"`
+	SMTPPort        int    `yaml:"smtp_port"`
+	SMTPUser        string `yaml:"smtp_user"`
+	SMTPPassword    string `yaml:"smtp_password"`
+	IMAPServer      string `yaml:"imap_server"`
+	IMAPPort        int    `yaml:"imap_port"`
+	IMAPUser        string `yaml:"imap_user"`
+	IMAPPassword    string `yaml:"imap_password"`
+	TLS             bool   `yaml:"tls"`
+	SkipCertVerify  bool   `yaml:"skip_cert_verify"`
 }
 
 type Config struct {
-	SMTP           SMTPConfig       `yaml:"smtp"`
-	ExternalServers []ExternalServer `yaml:"external_servers"`
+	TestServer      ServerConfig   `yaml:"testserver"`
+	ExternalServers []ServerConfig `yaml:"external_servers"`
 }
 
 
