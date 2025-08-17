@@ -1,0 +1,16 @@
+smtp:
+  server: smtp.example.com
+  port: 587
+  user: user@example.com
+  password: password
+external_servers:
+  - imap_server: imap1.example.com
+    imap_port: 993
+    imap_user: external1@example.com
+    imap_password: password1
+    recipient: external1@example.com
+  - imap_server: imap2.example.com
+    imap_port: 993
+    imap_user: external2@example.com
+    imap_password: password2
+    recipient: external2@example.com
