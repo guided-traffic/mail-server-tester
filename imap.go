@@ -1,14 +1,13 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 )
 
 
-
-import "crypto/tls"
 
 func FetchLatestMail(server ServerConfig) (*imap.Message, error) {
        addr := fmt.Sprintf("%s:%d", server.IMAPServer, server.IMAPPort)

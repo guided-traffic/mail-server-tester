@@ -20,7 +20,7 @@ func RunMailTests(cfg *Config) error {
 	       }
 	       fmt.Println("Mail versendet, warte auf Zustellung...")
 	       time.Sleep(10 * time.Second)
-	       msg, err := FetchLatestMail(ext)
+	       _, err := FetchLatestMail(ext)
 	       if err != nil {
 		       return fmt.Errorf("Fehler beim Abrufen bei %s: %w", ext.Name, err)
 	       }
@@ -40,7 +40,7 @@ func RunMailTests(cfg *Config) error {
 	       }
 	       fmt.Println("Mail versendet, warte auf Zustellung...")
 	       time.Sleep(10 * time.Second)
-	       msg, err := FetchLatestMail(cfg.TestServer)
+	       _, err := FetchLatestMail(cfg.TestServer)
 	       if err != nil {
 		       return fmt.Errorf("Fehler beim Abrufen bei %s: %w", cfg.TestServer.Name, err)
 	       }
