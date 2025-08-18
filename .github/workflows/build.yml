@@ -98,7 +98,7 @@ jobs:
           helm package mail-server-tester/
           mkdir -p repo
           mv *.tgz repo/
-          helm repo index repo/ --url https://guided-traffic.github.io/mail-server-tester/deploy/helm/repo
+          helm repo index repo/ --url https://guided-traffic.github.io/mail-server-tester/deploy/helm/repo/
           cd ../..
 
       - name: Configure Git
@@ -122,14 +122,15 @@ jobs:
         run: |
           mkdir -p deploy/helm/repo
           cp -r /tmp/helm-charts/* deploy/helm/repo/
-          cp -r deploy/helm/repo/* .
-          git add .
+          git add deploy/helm/repo/
           git commit -m "Release Helm chart for $GITHUB_REF_NAME"
           git push --force origin gh-pages
 
       - name: Update Release Assets
         uses: softprops/action-gh-release@v1
         with:
-          files: deploy/helm/repo/*.tgz
+          files: |
+            deploy/helm/repo/*.tgz
+            deploy/helm/repo/index.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
