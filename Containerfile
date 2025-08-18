@@ -24,10 +24,12 @@ FROM alpine:latest
 # Install ca-certificates for TLS connections
 RUN apk --no-cache add ca-certificates
 
-WORKDIR /root/
+RUN mkdir /app
+
+WORKDIR /app
 
 # Copy the binary from builder stage
-COPY --from=builder /app/mail-server-tester .
+COPY --from=builder /app/mail-server-tester /app
 
 # Expose metrics port
 EXPOSE 8080
