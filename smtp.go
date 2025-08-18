@@ -8,7 +8,14 @@ import (
 
 func SendTestMail(server ServerConfig, recipient, subject, body string) error {
   auth := smtp.PlainAuth("", server.SMTPUser, server.SMTPPassword, server.SMTPServer)
-  msg := []byte(fmt.Sprintf("Subject: %s\r\n\r\n%s", subject, body))
+
+  // Verwende mail_address falls definiert, sonst fallback auf smtp_user
+  fromAddr := server.MailAddress
+  if fromAddr == "" {
+    fromAddr = server.SMTPUser
+  }
+
+  msg := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s", fromAddr, recipient, subject, body))
   addr := fmt.Sprintf("%s:%d", server.SMTPServer, server.SMTPPort)
   if server.TLS {
     tlsConfig := &tls.Config{
@@ -27,7 +34,7 @@ func SendTestMail(server ServerConfig, recipient, subject, body string) error {
     if err := c.Auth(auth); err != nil {
       return err
     }
-    if err := c.Mail(server.SMTPUser); err != nil {
+    if err := c.Mail(fromAddr); err != nil {
       return err
     }
     if err := c.Rcpt(recipient); err != nil {
@@ -47,6 +54,6 @@ func SendTestMail(server ServerConfig, recipient, subject, body string) error {
     }
     return nil
   } else {
-    return smtp.SendMail(addr, auth, server.SMTPUser, []string{recipient}, msg)
+    return smtp.SendMail(addr, auth, fromAddr, []string{recipient}, msg)
   }
 }

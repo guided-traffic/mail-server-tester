@@ -17,6 +17,7 @@ type ServerConfig struct {
   IMAPPort        int    `yaml:"imap_port"`
   IMAPUser        string `yaml:"imap_user"`
   IMAPPassword    string `yaml:"imap_password"`
+  MailAddress     string `yaml:"mail_address"`
   TLS             bool   `yaml:"tls"`
   SkipCertVerify  bool   `yaml:"skip_cert_verify"`
 }

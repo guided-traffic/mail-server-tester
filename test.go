@@ -22,8 +22,15 @@ func RunMailTests(cfg *Config) error {
 		body := fmt.Sprintf("Testmail von %s an %s.", cfg.TestServer.Name, ext.Name)
 		start := time.Now()
 		fmt.Printf("Sende Testmail von %s an %s...\n", cfg.TestServer.Name, ext.Name)
+
+		// Bestimme die Empfänger-Mail-Adresse
+		recipientAddr := ext.MailAddress
+		if recipientAddr == "" {
+			recipientAddr = ext.IMAPUser
+		}
+
 		result := MailTestResult{From: cfg.TestServer.Name, To: ext.Name}
-		err := SendTestMail(cfg.TestServer, ext.IMAPUser, subject, body)
+		err := SendTestMail(cfg.TestServer, recipientAddr, subject, body)
 		if err != nil {
 			result.Success = false
 			result.Error = fmt.Sprintf("Fehler beim Senden: %v", err)
@@ -51,8 +58,15 @@ func RunMailTests(cfg *Config) error {
 		body := fmt.Sprintf("Testmail von %s an %s.", ext.Name, cfg.TestServer.Name)
 		start := time.Now()
 		fmt.Printf("Sende Testmail von %s an %s...\n", ext.Name, cfg.TestServer.Name)
+
+		// Bestimme die Empfänger-Mail-Adresse
+		recipientAddr := cfg.TestServer.MailAddress
+		if recipientAddr == "" {
+			recipientAddr = cfg.TestServer.IMAPUser
+		}
+
 		result := MailTestResult{From: ext.Name, To: cfg.TestServer.Name}
-		err := SendTestMail(ext, cfg.TestServer.IMAPUser, subject, body)
+		err := SendTestMail(ext, recipientAddr, subject, body)
 		if err != nil {
 			result.Success = false
 			result.Error = fmt.Sprintf("Fehler beim Senden: %v", err)

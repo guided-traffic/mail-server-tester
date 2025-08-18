@@ -1,6 +1,9 @@
 interval_minutes: 60
 testserver:
   name: testserver
+  mail_address: user@main.example.com
+  tls: true
+  skip_cert_verify: false
   smtp_server: smtp.main.example.com
   smtp_port: 587
   smtp_user: user@main.example.com
@@ -9,10 +12,12 @@ testserver:
   imap_port: 993
   imap_user: user@main.example.com
   imap_password: password
-  tls: true
-  skip_cert_verify: false
+
 external_servers:
   - name: external1
+    mail_address: user@main.example.com
+    tls: true
+    skip_cert_verify: true
     smtp_server: smtp.ext1.example.com
     smtp_port: 587
     smtp_user: user@ext1.example.com
@@ -21,9 +26,11 @@ external_servers:
     imap_port: 993
     imap_user: user@ext1.example.com
     imap_password: password1
-    tls: true
-    skip_cert_verify: true
+
   - name: external2
+    mail_address: user@main.example.com
+    tls: false
+    skip_cert_verify: false
     smtp_server: smtp.ext2.example.com
     smtp_port: 587
     smtp_user: user@ext2.example.com
@@ -32,5 +39,3 @@ external_servers:
     imap_port: 993
     imap_user: user@ext2.example.com
     imap_password: password2
-    tls: false
-    skip_cert_verify: false
