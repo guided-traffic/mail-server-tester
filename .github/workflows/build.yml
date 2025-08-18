@@ -98,7 +98,8 @@ jobs:
           helm package mail-server-tester/
           mkdir -p repo
           mv *.tgz repo/
-          helm repo index repo/ --url https://guided-traffic.github.io/mail-server-tester/deploy/helm/repo/
+          # Erstelle temporären Index für das neue Chart
+          helm repo index repo/ --url https://guided-traffic.github.io/mail-server-tester/
           cd ../..
 
       - name: Configure Git
@@ -120,9 +121,24 @@ jobs:
 
       - name: Publish to GitHub Pages
         run: |
-          mkdir -p deploy/helm/repo
-          cp -r /tmp/helm-charts/* deploy/helm/repo/
-          git add deploy/helm/repo/
+          # Kopiere neue Charts ins Root-Verzeichnis
+          cp /tmp/helm-charts/*.tgz .
+
+          # Merge mit existierendem index.yaml falls vorhanden
+          if [ -f index.yaml ]; then
+            # Erstelle temporären Ordner für Merge
+            mkdir -p temp-repo
+            cp *.tgz temp-repo/
+            # Merge mit existierendem Index
+            helm repo index temp-repo/ --url https://guided-traffic.github.io/mail-server-tester/ --merge index.yaml
+            cp temp-repo/index.yaml .
+            rm -rf temp-repo
+          else
+            # Erstelle neuen Index falls keiner existiert
+            helm repo index . --url https://guided-traffic.github.io/mail-server-tester/
+          fi
+
+          git add *.tgz index.yaml
           git commit -m "Release Helm chart for $GITHUB_REF_NAME"
           git push --force origin gh-pages
 
@@ -130,7 +146,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            deploy/helm/repo/*.tgz
-            deploy/helm/repo/index.yaml
+            *.tgz
+            index.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
