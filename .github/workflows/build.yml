@@ -91,6 +91,8 @@ jobs:
           # Aktualisiere Chart und App Version
           sed -i "s/^version:.*$/version: ${VERSION}/" deploy/helm/mail-server-tester/Chart.yaml
           sed -i "s/^appVersion:.*$/appVersion: \"${VERSION}\"/" deploy/helm/mail-server-tester/Chart.yaml
+          # Aktualisiere Image Tag in values.yaml
+          sed -i "s/^  tag:.*$/  tag: \"${VERSION}\"/" deploy/helm/mail-server-tester/values.yaml
 
       - name: Create Helm Package
         run: |

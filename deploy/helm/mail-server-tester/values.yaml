@@ -2,7 +2,7 @@
 replicaCount: 1
 
 image:
-  repository: mail-server-tester
+  repository: hansfischer/mail-server-tester
   pullPolicy: IfNotPresent
   tag: "latest"
 
