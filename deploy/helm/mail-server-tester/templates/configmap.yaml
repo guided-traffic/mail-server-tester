@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mail-server-tester.fullname" . }}
+  labels:
+    {{- include "mail-server-tester.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    interval_minutes: {{ .Values.config.intervalMinutes }}
+    testserver:
+      name: {{ .Values.config.testserver.name }}
+      smtp_server: {{ .Values.config.testserver.smtp_server }}
+      smtp_port: {{ .Values.config.testserver.smtp_port }}
+      smtp_user: {{ .Values.config.testserver.smtp_user }}
+      smtp_password: {{ .Values.config.testserver.smtp_password }}
+      imap_server: {{ .Values.config.testserver.imap_server }}
+      imap_port: {{ .Values.config.testserver.imap_port }}
+      imap_user: {{ .Values.config.testserver.imap_user }}
+      imap_password: {{ .Values.config.testserver.imap_password }}
+      tls: {{ .Values.config.testserver.tls }}
+      skip_cert_verify: {{ .Values.config.testserver.skip_cert_verify }}
+    external_servers:
+      {{- range .Values.config.external_servers }}
+      - name: {{ .name }}
+        smtp_server: {{ .smtp_server }}
+        smtp_port: {{ .smtp_port }}
+        smtp_user: {{ .smtp_user }}
+        smtp_password: {{ .smtp_password }}
+        imap_server: {{ .imap_server }}
+        imap_port: {{ .imap_port }}
+        imap_user: {{ .imap_user }}
+        imap_password: {{ .imap_password }}
+        tls: {{ .tls }}
+        skip_cert_verify: {{ .skip_cert_verify }}
+      {{- end }}

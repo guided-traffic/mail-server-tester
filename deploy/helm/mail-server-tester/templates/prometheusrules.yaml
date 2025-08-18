@@ -1,0 +1,35 @@
+{{- if .Values.prometheusRules.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "mail-server-tester.fullname" . }}
+  {{- if .Values.prometheusRules.namespace }}
+  namespace: {{ .Values.prometheusRules.namespace }}
+  {{- end }}
+  labels:
+    {{- include "mail-server-tester.labels" . | nindent 4 }}
+    {{- with .Values.prometheusRules.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: mail-server-tester
+      rules:
+        - alert: MailTestError
+          expr: mail_test_error_total > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Mail test errors detected"
+            description: "Mail test from {{ `{{ $labels.from }}` }} to {{ `{{ $labels.to }}` }} is failing"
+
+        - alert: MailTestDurationHigh
+          expr: mail_test_duration_seconds > {{ .Values.prometheusRules.maxTestDuration }}
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Mail test duration too high"
+            description: "Mail test from {{ `{{ $labels.from }}` }} to {{ `{{ $labels.to }}` }} took {{ `{{ $value }}` }} seconds"
+{{- end }}

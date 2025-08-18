@@ -31,5 +31,5 @@ go.work.sum
 # .idea/
 # .vscode/
 
-mail-server-tester
+/mail-server-tester
 node_modules/

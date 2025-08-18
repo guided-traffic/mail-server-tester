@@ -1,0 +1,85 @@
+# Default values for mail-server-tester
+replicaCount: 1
+
+image:
+  repository: mail-server-tester
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podLabels: {}
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8080"
+  prometheus.io/path: "/metrics"
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 8080
+
+serviceMonitor:
+  enabled: false
+  namespace: ""
+  interval: 30s
+  scrapeTimeout: 10s
+  labels: {}
+
+prometheusRules:
+  enabled: false
+  namespace: ""
+  labels: {}
+  maxTestDuration: 60
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+config:
+  intervalMinutes: 60
+  testserver:
+    name: testserver
+    smtp_server: smtp.example.com
+    smtp_port: 587
+    smtp_user: user@example.com
+    smtp_password: password
+    imap_server: imap.example.com
+    imap_port: 993
+    imap_user: user@example.com
+    imap_password: password
+    tls: true
+    skip_cert_verify: false
+  external_servers:
+    - name: external1
+      smtp_server: smtp.external1.com
+      smtp_port: 587
+      smtp_user: user@external1.com
+      smtp_password: password1
+      imap_server: imap.external1.com
+      imap_port: 993
+      imap_user: user@external1.com
+      imap_password: password1
+      tls: true
+      skip_cert_verify: true
