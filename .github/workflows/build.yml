@@ -1,10 +1,11 @@
-name: Build
+name: Build and Release
 on:
   release:
     types: [published]
 
 jobs:
   build:
+    name: Build Docker Image
     runs-on: self-hosted
     steps:
       - name: Checkout
@@ -59,3 +60,63 @@ jobs:
           labels: ${{ steps.tag_names.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  release-helm:
+    name: Release Helm Chart
+    needs: build
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.12.0
+
+      - name: Update Chart Version
+        run: |
+          # Extrahiere Version aus dem Release-Tag (ohne 'v' Prefix)
+          VERSION=${GITHUB_REF_NAME#v}
+          # Aktualisiere Chart und App Version
+          sed -i "s/^version:.*$/version: ${VERSION}/" deploy/helm/mail-server-tester/Chart.yaml
+          sed -i "s/^appVersion:.*$/appVersion: \"${VERSION}\"/" deploy/helm/mail-server-tester/Chart.yaml
+
+      - name: Create Helm Package
+        run: |
+          cd deploy/helm
+          helm package mail-server-tester/
+
+      - name: Checkout gh-pages branch
+        run: |
+          git checkout gh-pages || git checkout --orphan gh-pages
+          git rm -rf . || true
+          git clean -fxd
+        continue-on-error: true
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Setup Helm Repo
+        run: |
+          mkdir -p deploy/helm/repo
+          mv deploy/helm/*.tgz deploy/helm/repo/
+          helm repo index deploy/helm/repo/ --url https://guided-traffic.github.io/mail-server-tester/deploy/helm/repo
+
+      - name: Publish to GitHub Pages
+        run: |
+          cp -r deploy/helm/repo/* .
+          git add .
+          git commit -m "Release Helm chart for $GITHUB_REF_NAME"
+          git push origin gh-pages
+
+      - name: Update Release Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: deploy/helm/repo/*.tgz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
