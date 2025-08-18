@@ -88,6 +88,20 @@ jobs:
         run: |
           cd deploy/helm
           helm package mail-server-tester/
+          mkdir -p repo
+          mv *.tgz repo/
+          helm repo index repo/ --url https://guided-traffic.github.io/mail-server-tester/deploy/helm/repo
+          cd ../..
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Save Chart Package
+        run: |
+          mkdir -p /tmp/helm-charts
+          cp -r deploy/helm/repo/* /tmp/helm-charts/
 
       - name: Checkout gh-pages branch
         run: |
@@ -96,19 +110,10 @@ jobs:
           git clean -fxd
         continue-on-error: true
 
-      - name: Configure Git
-        run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-
-      - name: Setup Helm Repo
-        run: |
-          mkdir -p deploy/helm/repo
-          mv deploy/helm/*.tgz deploy/helm/repo/
-          helm repo index deploy/helm/repo/ --url https://guided-traffic.github.io/mail-server-tester/deploy/helm/repo
-
       - name: Publish to GitHub Pages
         run: |
+          mkdir -p deploy/helm/repo
+          cp -r /tmp/helm-charts/* deploy/helm/repo/
           cp -r deploy/helm/repo/* .
           git add .
           git commit -m "Release Helm chart for $GITHUB_REF_NAME"
