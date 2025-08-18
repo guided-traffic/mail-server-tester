@@ -1,9 +1,21 @@
 package main
 
+
 import (
 	"fmt"
 	"time"
 )
+
+type MailTestResult struct {
+	From      string
+	To        string
+	Success   bool
+	Duration  float64
+	Error     string
+}
+
+var MailTestResults []MailTestResult
+
 
 
 
@@ -15,18 +27,27 @@ func RunMailTests(cfg *Config) error {
 	       body := fmt.Sprintf("Testmail von %s an %s.", cfg.TestServer.Name, ext.Name)
 	       start := time.Now()
 	       fmt.Printf("Sende Testmail von %s an %s...\n", cfg.TestServer.Name, ext.Name)
-	       if err := SendTestMail(cfg.TestServer, ext.IMAPUser, subject, body); err != nil {
-		       return fmt.Errorf("Fehler beim Senden von %s an %s: %w", cfg.TestServer.Name, ext.Name, err)
+	       result := MailTestResult{From: cfg.TestServer.Name, To: ext.Name}
+	       err := SendTestMail(cfg.TestServer, ext.IMAPUser, subject, body)
+	       if err != nil {
+		       result.Success = false
+		       result.Error = fmt.Sprintf("Fehler beim Senden: %v", err)
+		       MailTestResults = append(MailTestResults, result)
+		       continue
 	       }
 	       fmt.Println("Mail versendet, warte auf Zustellung...")
 	       time.Sleep(10 * time.Second)
-	       _, err := FetchLatestMail(ext)
-	       if err != nil {
-		       return fmt.Errorf("Fehler beim Abrufen bei %s: %w", ext.Name, err)
-	       }
+	       _, err = FetchLatestMail(ext)
 	       elapsed := time.Since(start)
+	       result.Duration = elapsed.Seconds()
+	       if err != nil {
+		       result.Success = false
+		       result.Error = fmt.Sprintf("Fehler beim Abrufen: %v", err)
+	       } else {
+		       result.Success = true
+	       }
+	       MailTestResults = append(MailTestResults, result)
 	       fmt.Printf("Mail von %s an %s angekommen nach %s\n", cfg.TestServer.Name, ext.Name, elapsed)
-	       // TODO: Inhalt prüfen
        }
 
        // Externe Server -> Testserver
@@ -35,18 +56,27 @@ func RunMailTests(cfg *Config) error {
 	       body := fmt.Sprintf("Testmail von %s an %s.", ext.Name, cfg.TestServer.Name)
 	       start := time.Now()
 	       fmt.Printf("Sende Testmail von %s an %s...\n", ext.Name, cfg.TestServer.Name)
-	       if err := SendTestMail(ext, cfg.TestServer.IMAPUser, subject, body); err != nil {
-		       return fmt.Errorf("Fehler beim Senden von %s an %s: %w", ext.Name, cfg.TestServer.Name, err)
+	       result := MailTestResult{From: ext.Name, To: cfg.TestServer.Name}
+	       err := SendTestMail(ext, cfg.TestServer.IMAPUser, subject, body)
+	       if err != nil {
+		       result.Success = false
+		       result.Error = fmt.Sprintf("Fehler beim Senden: %v", err)
+		       MailTestResults = append(MailTestResults, result)
+		       continue
 	       }
 	       fmt.Println("Mail versendet, warte auf Zustellung...")
 	       time.Sleep(10 * time.Second)
-	       _, err := FetchLatestMail(cfg.TestServer)
-	       if err != nil {
-		       return fmt.Errorf("Fehler beim Abrufen bei %s: %w", cfg.TestServer.Name, err)
-	       }
+	       _, err = FetchLatestMail(cfg.TestServer)
 	       elapsed := time.Since(start)
+	       result.Duration = elapsed.Seconds()
+	       if err != nil {
+		       result.Success = false
+		       result.Error = fmt.Sprintf("Fehler beim Abrufen: %v", err)
+	       } else {
+		       result.Success = true
+	       }
+	       MailTestResults = append(MailTestResults, result)
 	       fmt.Printf("Mail von %s an %s angekommen nach %s\n", ext.Name, cfg.TestServer.Name, elapsed)
-	       // TODO: Inhalt prüfen
        }
        return nil
 }

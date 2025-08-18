@@ -1,3 +1,4 @@
+interval_minutes: 60
 testserver:
   name: testserver
   smtp_server: smtp.main.example.com

@@ -24,6 +24,7 @@ type ServerConfig struct {
 type Config struct {
 	TestServer      ServerConfig   `yaml:"testserver"`
 	ExternalServers []ServerConfig `yaml:"external_servers"`
+	IntervalMinutes int            `yaml:"interval_minutes"`
 }
 
 
