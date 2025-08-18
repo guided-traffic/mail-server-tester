@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  mail-server-tester:
+  - apiVersion: v2
+    appVersion: 1.3.1
+    created: "2025-08-18T12:14:59.097084762Z"
+    description: A Helm chart for the Mail Server Tester application
+    digest: 695cc9676e06fd520bea8f6e10712e8f2a4db7573e42246dc6b18ed91bf5ec5d
+    name: mail-server-tester
+    type: application
+    urls:
+    - https://guided-traffic.github.io/mail-server-tester/deploy/helm/repo/mail-server-tester-1.3.1.tgz
+    version: 1.3.1
+generated: "2025-08-18T12:14:59.096411644Z"
