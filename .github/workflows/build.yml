@@ -16,11 +16,6 @@ jobs:
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v3
-        # with:
-        #   config-inline: |
-        #     [registry."harbor.wds18.net"]
-        #       http = true
-        #       insecure = true
 
       - name: Login to Docker Hub
         if: github.event_name != 'pull_request'
@@ -52,12 +47,13 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
+          file: Containerfile
           context: .
           build-args: |
             BUILD_NUMBER=${{ github.ref_name }}
             GIT_COMMIT=${{ github.sha }}
             BUILD_TIME=${{ steps.time.outputs.epoch }}
-          platforms: linux/amd64  # ,linux/arm64
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.tag_names.outputs.tags }}
           labels: ${{ steps.tag_names.outputs.labels }}
