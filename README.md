@@ -2,6 +2,29 @@
 
 A continuous mail server testing tool that monitors mail delivery between multiple mail servers and exposes metrics for Prometheus monitoring.
 
+## Helm Chart Installation
+
+First, add the Helm repository:
+```bash
+helm repo add mail-server-tester https://guided-traffic.github.io/mail-server-tester
+helm repo update
+```
+
+Then install the chart:
+```bash
+helm install mail-tester mail-server-tester/mail-server-tester \
+  --namespace mail-tester \
+  --create-namespace \
+  --set config.testserver.smtp_server=smtp.example.com \
+  --set config.testserver.smtp_user=user@example.com \
+  --set config.testserver.smtp_password=your-password \
+  --set config.testserver.imap_server=imap.example.com \
+  --set config.testserver.imap_user=user@example.com \
+  --set config.testserver.imap_password=your-password
+```
+
+For a complete list of configuration values, check the chart's [values.yaml](deploy/helm/mail-server-tester/values.yaml).
+
 ## Features
 
 - Continuous bidirectional mail testing between servers
