@@ -27,12 +27,14 @@ For a complete list of configuration values, check the chart's [values.yaml](dep
 
 ## Features
 
+- **Connection verification**: Validates SMTP and IMAP credentials at startup
 - Continuous bidirectional mail testing between servers
 - Prometheus metrics endpoint for monitoring
 - Support for TLS/SSL connections
 - Configurable test intervals
 - Support for multiple external mail servers
 - Docker/Podman containerization support
+- Command-line options for configuration and error handling
 
 ## How it works
 
@@ -136,11 +138,46 @@ external_servers:
 ### Command line options
 
 ```bash
+# Show help
+./mail-server-tester --help
+
 # Use default config.yaml
 ./mail-server-tester
 
 # Use custom config file
 ./mail-server-tester --configpath /path/to/config.yaml
+
+# Exit immediately if connection verification fails
+./mail-server-tester --exit-on-connection-error
+
+# Combine options
+./mail-server-tester --configpath /path/to/config.yaml --exit-on-connection-error
+```
+
+Available command line options:
+- `--configpath PATH` - Path to configuration file (default: config.yaml)
+- `--exit-on-connection-error` - Exit program if credential verification fails
+- `--help` - Show usage information
+
+### Connection Verification
+
+At startup, the application automatically verifies all SMTP and IMAP credentials defined in the configuration. This helps identify configuration issues before starting the main testing loop.
+
+Example output:
+```
+=== Überprüfung der Zugangsdaten ===
+
+Teste Testserver 'testserver':
+  SMTP (smtp.main.example.com:587)... ✓ OK (0.32s)
+  IMAP (imap.main.example.com:993)... ✓ OK (0.28s)
+
+Teste externen Server 'external1':
+  SMTP (smtp.ext1.example.com:587)... ✗ FEHLER: SMTP-Authentifizierung fehlgeschlagen (1.20s)
+  IMAP (imap.ext1.example.com:993)... ✓ OK (0.45s)
+
+=== Zusammenfassung ===
+Erfolgreiche Verbindungen: 3/4
+✗ 1 Verbindung(en) fehlgeschlagen!
 ```
 
 ### Running with custom config

@@ -37,18 +37,67 @@ func boolToInt(b bool) int {
 	return 0
 }
 
+func printUsage() {
+	fmt.Println("Usage: mail-server-tester [OPTIONS]")
+	fmt.Println()
+	fmt.Println("OPTIONS:")
+	fmt.Println("  --configpath PATH              Pfad zur Konfigurationsdatei (default: config.yaml)")
+	fmt.Println("  --exit-on-connection-error     Beende das Programm bei Verbindungsfehlern")
+	fmt.Println("  --help                         Zeige diese Hilfe an")
+}
+
 func main() {
 	fmt.Println("Mail Server Tester gestartet.")
 	configPath := "config.yaml"
-	for i := 1; i < len(os.Args)-1; i++ {
-		if os.Args[i] == "--configpath" {
-					configPath = os.Args[i+1]
+	exitOnError := false
+	
+	// Erste Durchlauf: Prüfe auf --help vor allen anderen Operationen
+	for i := 1; i < len(os.Args); i++ {
+		if os.Args[i] == "--help" || os.Args[i] == "-h" {
+			printUsage()
+			os.Exit(0)
+		}
+	}
+	
+	// Zweite Durchlauf: Parse alle anderen Argumente
+	for i := 1; i < len(os.Args); i++ {
+		if os.Args[i] == "--configpath" && i+1 < len(os.Args) {
+			configPath = os.Args[i+1]
+			i++ // Skip next argument since it's the config path
+		} else if os.Args[i] == "--exit-on-connection-error" {
+			exitOnError = true
+		} else if os.Args[i] != "--help" && os.Args[i] != "-h" {
+			fmt.Fprintf(os.Stderr, "Unbekanntes Argument: %s\n", os.Args[i])
+			printUsage()
+			os.Exit(1)
 		}
 	}
 	cfg, err := LoadConfig(configPath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Fehler beim Laden der Konfiguration: %v\n", err)
 		os.Exit(1)
+	}
+
+	// Überprüfe alle Verbindungen beim Start
+	connectionResults := VerifyAllConnections(cfg)
+	
+	// Prüfe ob kritische Fehler aufgetreten sind
+	hasErrors := false
+	for _, result := range connectionResults {
+		if !result.Success {
+			hasErrors = true
+			break
+		}
+	}
+	
+	if hasErrors {
+		if exitOnError {
+			fmt.Println("❌ Kritische Verbindungsfehler festgestellt. Programm wird beendet.")
+			os.Exit(1)
+		} else {
+			fmt.Println("⚠️  Warnung: Es wurden Verbindungsfehler festgestellt. Das Programm wird fortgesetzt, aber einige Tests könnten fehlschlagen.")
+			fmt.Println()
+		}
 	}
 
 	// Start HTTP server for Prometheus metrics
