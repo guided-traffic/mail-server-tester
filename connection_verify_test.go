@@ -9,32 +9,32 @@ import (
 func getTestConfig() *Config {
 	return &Config{
 		TestServer: ServerConfig{
-			Name:         "testserver",
-			SMTPServer:   "localhost",
-			SMTPPort:     587,
-			SMTPUser:     "test@example.com",
-			SMTPPassword: "password",
-			IMAPServer:   "localhost",
-			IMAPPort:     993,
-			IMAPUser:     "test@example.com",
-			IMAPPassword: "password",
-			MailAddress:  "test@example.com",
-			TLS:          false,
+			Name:           "testserver",
+			SMTPServer:     "localhost",
+			SMTPPort:       587,
+			SMTPUser:       "test@example.com",
+			SMTPPassword:   "password",
+			IMAPServer:     "localhost",
+			IMAPPort:       993,
+			IMAPUser:       "test@example.com",
+			IMAPPassword:   "password",
+			MailAddress:    "test@example.com",
+			TLS:            false,
 			SkipCertVerify: true,
 		},
 		ExternalServers: []ServerConfig{
 			{
-				Name:         "external1",
-				SMTPServer:   "localhost",
-				SMTPPort:     587,
-				SMTPUser:     "ext1@example.com",
-				SMTPPassword: "password1",
-				IMAPServer:   "localhost",
-				IMAPPort:     993,
-				IMAPUser:     "ext1@example.com",
-				IMAPPassword: "password1",
-				MailAddress:  "ext1@example.com",
-				TLS:          false,
+				Name:           "external1",
+				SMTPServer:     "localhost",
+				SMTPPort:       587,
+				SMTPUser:       "ext1@example.com",
+				SMTPPassword:   "password1",
+				IMAPServer:     "localhost",
+				IMAPPort:       993,
+				IMAPUser:       "ext1@example.com",
+				IMAPPassword:   "password1",
+				MailAddress:    "ext1@example.com",
+				TLS:            false,
 				SkipCertVerify: true,
 			},
 		},
@@ -179,7 +179,7 @@ func TestPrintUsageFormat(t *testing.T) {
 			t.Errorf("printUsage() panicked: %v", r)
 		}
 	}()
-	
+
 	// Umleitung der Ausgabe ist hier nicht einfach testbar,
 	// aber wir können zumindest sicherstellen, dass die Funktion nicht abstürzt
 	// In einer echten Testumgebung würde man stdout umleiten

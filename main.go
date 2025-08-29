@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -21,9 +21,9 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 		sb.WriteString(fmt.Sprintf("mail_test_success{%s} %d\n", labels, boolToInt(res.Success)))
 		sb.WriteString(fmt.Sprintf("mail_test_duration_seconds{%s} %.2f\n", labels, res.Duration))
 		if res.Error != "" {
-						sb.WriteString(fmt.Sprintf("mail_test_error_total{%s} 1\n", labels))
+			sb.WriteString(fmt.Sprintf("mail_test_error_total{%s} 1\n", labels))
 		} else {
-						sb.WriteString(fmt.Sprintf("mail_test_error_total{%s} 0\n", labels))
+			sb.WriteString(fmt.Sprintf("mail_test_error_total{%s} 0\n", labels))
 		}
 	}
 	w.Header().Set("Content-Type", "text/plain; version=0.0.4")
@@ -32,7 +32,7 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 
 func boolToInt(b bool) int {
 	if b {
-				return 1
+		return 1
 	}
 	return 0
 }
@@ -50,7 +50,7 @@ func main() {
 	fmt.Println("Mail Server Tester gestartet.")
 	configPath := "config.yaml"
 	exitOnError := false
-	
+
 	// Erste Durchlauf: Prüfe auf --help vor allen anderen Operationen
 	for i := 1; i < len(os.Args); i++ {
 		if os.Args[i] == "--help" || os.Args[i] == "-h" {
@@ -58,7 +58,7 @@ func main() {
 			os.Exit(0)
 		}
 	}
-	
+
 	// Zweite Durchlauf: Parse alle anderen Argumente
 	for i := 1; i < len(os.Args); i++ {
 		if os.Args[i] == "--configpath" && i+1 < len(os.Args) {
@@ -80,7 +80,7 @@ func main() {
 
 	// Überprüfe alle Verbindungen beim Start
 	connectionResults := VerifyAllConnections(cfg)
-	
+
 	// Prüfe ob kritische Fehler aufgetreten sind
 	hasErrors := false
 	for _, result := range connectionResults {
@@ -89,7 +89,7 @@ func main() {
 			break
 		}
 	}
-	
+
 	if hasErrors {
 		if exitOnError {
 			fmt.Println("❌ Kritische Verbindungsfehler festgestellt. Programm wird beendet.")
@@ -103,13 +103,13 @@ func main() {
 	// Start HTTP server for Prometheus metrics
 	http.HandleFunc("/metrics", metricsHandler)
 	go func() {
-				fmt.Println("Metrics endpoint running on :8080/metrics")
-				http.ListenAndServe(":8080", nil)
+		fmt.Println("Metrics endpoint running on :8080/metrics")
+		http.ListenAndServe(":8080", nil)
 	}()
 
 	interval := time.Duration(cfg.IntervalMinutes)
 	if interval == 0 {
-				interval = 60
+		interval = 60
 	}
 	interval = interval * time.Minute
 
@@ -117,9 +117,9 @@ func main() {
 		MailTestResults = nil // Reset results for each run
 		fmt.Printf("Starting mail tests (%s interval)...\n", interval)
 		if err := RunMailTests(cfg); err != nil {
-						fmt.Fprintf(os.Stderr, "Testfehler: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Testfehler: %v\n", err)
 		} else {
-						fmt.Println("Alle Tests abgeschlossen.")
+			fmt.Println("Alle Tests abgeschlossen.")
 		}
 		time.Sleep(interval)
 	}
