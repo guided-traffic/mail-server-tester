@@ -40,5 +40,5 @@ jobs:
         env:
           LOG_LEVEL: ${{ inputs.logLevel || 'info' }}
           RENOVATE_AUTODISCOVER: 'true'
-          RENOVATE_AUTODISCOVER_FILTER: 'guided-traffic/valkey-operator'
+          RENOVATE_AUTODISCOVER_FILTER: 'guided-traffic/mail-server-tester'
           RENOVATE_REQUIRE_CONFIG: 'required'

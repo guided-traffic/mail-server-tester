@@ -14,7 +14,7 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -51,7 +51,7 @@ jobs:
         run: echo "epoch=$(date +%s)" >> $GITHUB_OUTPUT
 
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           file: Containerfile
           context: .
@@ -75,14 +75,14 @@ jobs:
       pages: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Install Helm
-        uses: azure/setup-helm@v3
+        uses: azure/setup-helm@v4
         with:
-          version: v3.12.0
+          version: v3.16.4
 
       - name: Update Chart Version
         run: |
@@ -115,7 +115,7 @@ jobs:
           cp -r deploy/helm/repo/* /tmp/helm-charts/
 
       - name: Checkout gh-pages branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: gh-pages
           fetch-depth: 0
@@ -145,7 +145,7 @@ jobs:
           git push --force origin gh-pages
 
       - name: Update Release Assets
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             *.tgz
