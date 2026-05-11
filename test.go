@@ -39,7 +39,7 @@ func RunMailTests(cfg *Config) error {
 		}
 		fmt.Println("Mail versendet, warte auf Zustellung...")
 		time.Sleep(10 * time.Second)
-		_, err = FetchLatestMail(ext)
+		_, err = FetchAndCleanTestMails(ext, subject)
 		elapsed := time.Since(start)
 		result.Duration = elapsed.Seconds()
 		if err != nil {
@@ -75,7 +75,7 @@ func RunMailTests(cfg *Config) error {
 		}
 		fmt.Println("Mail versendet, warte auf Zustellung...")
 		time.Sleep(10 * time.Second)
-		_, err = FetchLatestMail(cfg.TestServer)
+		_, err = FetchAndCleanTestMails(cfg.TestServer, subject)
 		elapsed := time.Since(start)
 		result.Duration = elapsed.Seconds()
 		if err != nil {
