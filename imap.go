@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"net"
 	"net/textproto"
 	"time"
 
@@ -12,16 +13,29 @@ import (
 
 const testMailSubjectPrefix = "Mail-Server-Test "
 
+// dialNetTimeout begrenzt den TCP-Connect, damit unreachable Server keinen
+// Test- oder Cleanup-Goroutine über Minuten blockieren.
+const dialNetTimeout = 30 * time.Second
+
 func dialIMAP(server ServerConfig) (*client.Client, error) {
 	addr := fmt.Sprintf("%s:%d", server.IMAPServer, server.IMAPPort)
+	dialer := &net.Dialer{Timeout: dialNetTimeout}
 	if server.TLS {
 		tlsConfig := &tls.Config{
 			InsecureSkipVerify: server.SkipCertVerify,
 			ServerName:         server.IMAPServer,
 		}
-		return client.DialTLS(addr, tlsConfig)
+		conn, err := tls.DialWithDialer(dialer, "tcp", addr, tlsConfig)
+		if err != nil {
+			return nil, err
+		}
+		return client.New(conn)
 	}
-	return client.Dial(addr)
+	conn, err := dialer.Dial("tcp", addr)
+	if err != nil {
+		return nil, err
+	}
+	return client.New(conn)
 }
 
 // WaitAndCleanTestMail pollt das Postfach bis eine Mail mit exaktem Subject

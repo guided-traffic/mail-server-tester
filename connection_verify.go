@@ -3,10 +3,9 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"net"
 	"net/smtp"
 	"time"
-
-	"github.com/emersion/go-imap/client"
 )
 
 // ConnectionTestResult speichert das Ergebnis eines Verbindungstests
@@ -29,48 +28,43 @@ func VerifySMTPConnection(server ServerConfig) ConnectionTestResult {
 
 	auth := smtp.PlainAuth("", server.SMTPUser, server.SMTPPassword, server.SMTPServer)
 	addr := fmt.Sprintf("%s:%d", server.SMTPServer, server.SMTPPort)
+	dialer := &net.Dialer{Timeout: dialNetTimeout}
 
+	var conn net.Conn
+	var err error
 	if server.TLS {
 		tlsConfig := &tls.Config{
 			InsecureSkipVerify: server.SkipCertVerify,
 			ServerName:         server.SMTPServer,
 		}
-		conn, err := tls.Dial("tcp", addr, tlsConfig)
+		conn, err = tls.DialWithDialer(dialer, "tcp", addr, tlsConfig)
 		if err != nil {
 			result.Error = fmt.Sprintf("TLS-Verbindung fehlgeschlagen: %v", err)
 			result.Duration = time.Since(start)
 			return result
 		}
-		defer conn.Close()
-
-		c, err := smtp.NewClient(conn, server.SMTPServer)
-		if err != nil {
-			result.Error = fmt.Sprintf("SMTP-Client-Erstellung fehlgeschlagen: %v", err)
-			result.Duration = time.Since(start)
-			return result
-		}
-		defer c.Quit()
-
-		if err := c.Auth(auth); err != nil {
-			result.Error = fmt.Sprintf("SMTP-Authentifizierung fehlgeschlagen: %v", err)
-			result.Duration = time.Since(start)
-			return result
-		}
 	} else {
-		// Für unverschlüsselte Verbindungen verwenden wir eine einfache Verbindung
-		c, err := smtp.Dial(addr)
+		conn, err = dialer.Dial("tcp", addr)
 		if err != nil {
 			result.Error = fmt.Sprintf("SMTP-Verbindung fehlgeschlagen: %v", err)
 			result.Duration = time.Since(start)
 			return result
 		}
-		defer c.Quit()
+	}
 
-		if err := c.Auth(auth); err != nil {
-			result.Error = fmt.Sprintf("SMTP-Authentifizierung fehlgeschlagen: %v", err)
-			result.Duration = time.Since(start)
-			return result
-		}
+	c, err := smtp.NewClient(conn, server.SMTPServer)
+	if err != nil {
+		conn.Close()
+		result.Error = fmt.Sprintf("SMTP-Client-Erstellung fehlgeschlagen: %v", err)
+		result.Duration = time.Since(start)
+		return result
+	}
+	defer c.Quit()
+
+	if err := c.Auth(auth); err != nil {
+		result.Error = fmt.Sprintf("SMTP-Authentifizierung fehlgeschlagen: %v", err)
+		result.Duration = time.Since(start)
+		return result
 	}
 
 	result.Success = true
@@ -87,20 +81,7 @@ func VerifyIMAPConnection(server ServerConfig) ConnectionTestResult {
 		Success:    false,
 	}
 
-	addr := fmt.Sprintf("%s:%d", server.IMAPServer, server.IMAPPort)
-	var c *client.Client
-	var err error
-
-	if server.TLS {
-		tlsConfig := &tls.Config{
-			InsecureSkipVerify: server.SkipCertVerify,
-			ServerName:         server.IMAPServer,
-		}
-		c, err = client.DialTLS(addr, tlsConfig)
-	} else {
-		c, err = client.Dial(addr)
-	}
-
+	c, err := dialIMAP(server)
 	if err != nil {
 		result.Error = fmt.Sprintf("IMAP-Verbindung fehlgeschlagen: %v", err)
 		result.Duration = time.Since(start)
