@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/textproto"
+	"strconv"
 	"time"
 
 	"github.com/emersion/go-imap"
@@ -18,7 +19,7 @@ const testMailSubjectPrefix = "Mail-Server-Test "
 const dialNetTimeout = 30 * time.Second
 
 func dialIMAP(server ServerConfig) (*client.Client, error) {
-	addr := fmt.Sprintf("%s:%d", server.IMAPServer, server.IMAPPort)
+	addr := net.JoinHostPort(server.IMAPServer, strconv.Itoa(server.IMAPPort))
 	dialer := &net.Dialer{Timeout: dialNetTimeout}
 	if server.TLS {
 		tlsConfig := &tls.Config{

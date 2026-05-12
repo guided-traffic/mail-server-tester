@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/smtp"
+	"strconv"
 	"time"
 )
 
@@ -27,7 +28,7 @@ func VerifySMTPConnection(server ServerConfig) ConnectionTestResult {
 	}
 
 	auth := smtp.PlainAuth("", server.SMTPUser, server.SMTPPassword, server.SMTPServer)
-	addr := fmt.Sprintf("%s:%d", server.SMTPServer, server.SMTPPort)
+	addr := net.JoinHostPort(server.SMTPServer, strconv.Itoa(server.SMTPPort))
 	dialer := &net.Dialer{Timeout: dialNetTimeout}
 
 	var conn net.Conn

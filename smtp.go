@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/smtp"
+	"strconv"
 )
 
 func SendTestMail(server ServerConfig, recipient, subject, body string) error {
@@ -16,7 +17,7 @@ func SendTestMail(server ServerConfig, recipient, subject, body string) error {
 	}
 
 	msg := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s", fromAddr, recipient, subject, body))
-	addr := fmt.Sprintf("%s:%d", server.SMTPServer, server.SMTPPort)
+	addr := net.JoinHostPort(server.SMTPServer, strconv.Itoa(server.SMTPPort))
 	dialer := &net.Dialer{Timeout: dialNetTimeout}
 
 	var conn net.Conn
