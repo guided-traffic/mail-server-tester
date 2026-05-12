@@ -7,6 +7,8 @@ metadata:
 data:
   config.yaml: |
     interval_minutes: {{ .Values.config.intervalMinutes }}
+    delivery_timeout_minutes: {{ .Values.config.deliveryTimeoutMinutes | default 30 }}
+    delivery_poll_seconds: {{ .Values.config.deliveryPollSeconds | default 5 }}
     testserver:
       name: {{ .Values.config.testserver.name }}
       smtp_server: {{ .Values.config.testserver.smtp_server }}

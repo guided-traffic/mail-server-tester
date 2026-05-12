@@ -1,4 +1,6 @@
 interval_minutes: 60
+delivery_timeout_minutes: 30
+delivery_poll_seconds: 5
 testserver:
   name: testserver
   mail_address: user@main.example.com

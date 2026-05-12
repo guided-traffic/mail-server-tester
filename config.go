@@ -23,9 +23,11 @@ type ServerConfig struct {
 }
 
 type Config struct {
-  TestServer      ServerConfig   `yaml:"testserver"`
-  ExternalServers []ServerConfig `yaml:"external_servers"`
-  IntervalMinutes int            `yaml:"interval_minutes"`
+  TestServer             ServerConfig   `yaml:"testserver"`
+  ExternalServers        []ServerConfig `yaml:"external_servers"`
+  IntervalMinutes        int            `yaml:"interval_minutes"`
+  DeliveryTimeoutMinutes int            `yaml:"delivery_timeout_minutes"`
+  DeliveryPollSeconds    int            `yaml:"delivery_poll_seconds"`
 }
 
 
