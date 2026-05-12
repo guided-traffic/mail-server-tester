@@ -33,7 +33,9 @@ Container: `docker build -t mail-server-tester -f Containerfile .`
 - Sprache: User-facing logs/errors auf Deutsch (siehe `connection_verify.go`, `main.go`). Code-Kommentare gemischt. Beibehalten.
 - Recipient-resolution: `MailAddress` first, fallback `IMAPUser` (test.go) bzw. `SMTPUser` (smtp.go für From).
 - TLS-Pfad und Plain-Pfad sind getrennt in `smtp.go` und `connection_verify.go` — Änderungen in beiden Zweigen nötig.
-- `MailTestResults` ist globaler Slice, jeden Lauf in `main.go` zurückgesetzt. Nicht thread-safe (aber Tests sind seriell + Metrics-Handler nur lesend).
+- `MailTestResults` ist globaler Slice, jeden Lauf in `main.go` zurückgesetzt. Tests laufen parallel pro Cycle (`sync.WaitGroup` in `test.go`); Writes werden über `resultsMu` (`sync.Mutex`) serialisiert. Metrics-Handler liest ohne Lock — akzeptiert, weil Reset+Cycle-Run sequenziell zwischen Cycles ablaufen.
+- `RunMailTests` macht zu Beginn jedes Cycles `CleanupOldTestMails` pro Postfach (Bulk-Cleanup per Subject-Prefix für Altlasten). Während der parallelen Tests löscht `WaitAndCleanTestMail` nur die exakt gematchte Mail — sonst würden parallele Tests gegen dieselbe Inbox (mehrere Externals → Testserver) sich gegenseitig Mails wegputzen.
+- Zustellzeit-Konfiguration: `delivery_timeout_minutes` (Default 30) + `delivery_poll_seconds` (Default 5). Poll-Loop in `imap.go:WaitAndCleanTestMail` sucht periodisch per exaktem Subject.
 - Releases: semantic-release auf `main` aus Conventional Commits. Chart-Version in `deploy/helm/.../Chart.yaml` (assets-Pfad im `.releaserc.json` zeigt allerdings auf `charts/*/Chart.yaml` — möglicher Mismatch, prüfen falls Release-Asset-Update fehlschlägt).
 - Go 1.24, IMAP via `github.com/emersion/go-imap` v1.2.1, SMTP via stdlib `net/smtp`.
 

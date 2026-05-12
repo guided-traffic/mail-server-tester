@@ -59,6 +59,8 @@ affinity: {}
 
 config:
   intervalMinutes: 60
+  deliveryTimeoutMinutes: 30
+  deliveryPollSeconds: 5
   testserver:
     name: testserver
     smtp_server: smtp.example.com

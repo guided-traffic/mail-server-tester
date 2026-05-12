@@ -1,91 +1,104 @@
 package main
 
 import (
-  "fmt"
-  "time"
+	"fmt"
+	"sync"
+	"time"
 )
 
 type MailTestResult struct {
-  From      string
-  To        string
-  Success   bool
-  Duration  float64
-  Error     string
+	From     string
+	To       string
+	Success  bool
+	Duration float64
+	Error    string
 }
 
-var MailTestResults []MailTestResult
+var (
+	MailTestResults []MailTestResult
+	resultsMu       sync.Mutex
+)
+
+func appendResult(r MailTestResult) {
+	resultsMu.Lock()
+	defer resultsMu.Unlock()
+	MailTestResults = append(MailTestResults, r)
+}
+
+func runSingleTest(fromCfg, toCfg ServerConfig, fromName, toName, recipientAddr string, timeout, poll time.Duration) {
+	subject := fmt.Sprintf("Mail-Server-Test %s->%s %d", fromName, toName, time.Now().Unix())
+	body := fmt.Sprintf("Testmail von %s an %s.", fromName, toName)
+	start := time.Now()
+	fmt.Printf("Sende Testmail von %s an %s...\n", fromName, toName)
+
+	result := MailTestResult{From: fromName, To: toName}
+	if err := SendTestMail(fromCfg, recipientAddr, subject, body); err != nil {
+		result.Success = false
+		result.Error = fmt.Sprintf("Fehler beim Senden: %v", err)
+		result.Duration = time.Since(start).Seconds()
+		appendResult(result)
+		fmt.Printf("Mail von %s an %s konnte nicht versendet werden: %v\n", fromName, toName, err)
+		return
+	}
+	fmt.Printf("Mail %s->%s versendet, warte auf Zustellung (max %s, Poll alle %s)...\n", fromName, toName, timeout, poll)
+
+	_, err := WaitAndCleanTestMail(toCfg, subject, timeout, poll)
+	elapsed := time.Since(start)
+	result.Duration = elapsed.Seconds()
+	if err != nil {
+		result.Success = false
+		result.Error = fmt.Sprintf("Fehler beim Abrufen: %v", err)
+		fmt.Printf("Mail von %s an %s NICHT angekommen nach %s: %v\n", fromName, toName, elapsed, err)
+	} else {
+		result.Success = true
+		fmt.Printf("Mail von %s an %s angekommen nach %s\n", fromName, toName, elapsed)
+	}
+	appendResult(result)
+}
 
 func RunMailTests(cfg *Config) error {
-	// Testserver -> externe Server
+	timeoutMin := cfg.DeliveryTimeoutMinutes
+	if timeoutMin <= 0 {
+		timeoutMin = 30
+	}
+	pollSec := cfg.DeliveryPollSeconds
+	if pollSec <= 0 {
+		pollSec = 5
+	}
+	timeout := time.Duration(timeoutMin) * time.Minute
+	poll := time.Duration(pollSec) * time.Second
+
+	// Altlasten aus vorherigen (ggf. fehlgeschlagenen) Läufen entfernen, bevor
+	// die parallelen Tests starten — danach räumt jeder Test nur noch seine
+	// eigene Mail per exaktem Subject ab.
+	CleanupOldTestMails(cfg.TestServer)
 	for _, ext := range cfg.ExternalServers {
-		subject := fmt.Sprintf("Mail-Server-Test %s->%s %d", cfg.TestServer.Name, ext.Name, time.Now().Unix())
-		body := fmt.Sprintf("Testmail von %s an %s.", cfg.TestServer.Name, ext.Name)
-		start := time.Now()
-		fmt.Printf("Sende Testmail von %s an %s...\n", cfg.TestServer.Name, ext.Name)
-
-		// Bestimme die Empfänger-Mail-Adresse
-		recipientAddr := ext.MailAddress
-		if recipientAddr == "" {
-			recipientAddr = ext.IMAPUser
-		}
-
-		result := MailTestResult{From: cfg.TestServer.Name, To: ext.Name}
-		err := SendTestMail(cfg.TestServer, recipientAddr, subject, body)
-		if err != nil {
-			result.Success = false
-			result.Error = fmt.Sprintf("Fehler beim Senden: %v", err)
-			MailTestResults = append(MailTestResults, result)
-			continue
-		}
-		fmt.Println("Mail versendet, warte auf Zustellung...")
-		time.Sleep(10 * time.Second)
-		_, err = FetchAndCleanTestMails(ext, subject)
-		elapsed := time.Since(start)
-		result.Duration = elapsed.Seconds()
-		if err != nil {
-			result.Success = false
-			result.Error = fmt.Sprintf("Fehler beim Abrufen: %v", err)
-		} else {
-			result.Success = true
-		}
-		MailTestResults = append(MailTestResults, result)
-		fmt.Printf("Mail von %s an %s angekommen nach %s\n", cfg.TestServer.Name, ext.Name, elapsed)
+		CleanupOldTestMails(ext)
 	}
 
-	// Externe Server -> Testserver
+	var wg sync.WaitGroup
 	for _, ext := range cfg.ExternalServers {
-		subject := fmt.Sprintf("Mail-Server-Test %s->%s %d", ext.Name, cfg.TestServer.Name, time.Now().Unix())
-		body := fmt.Sprintf("Testmail von %s an %s.", ext.Name, cfg.TestServer.Name)
-		start := time.Now()
-		fmt.Printf("Sende Testmail von %s an %s...\n", ext.Name, cfg.TestServer.Name)
+		ext := ext
 
-		// Bestimme die Empfänger-Mail-Adresse
-		recipientAddr := cfg.TestServer.MailAddress
-		if recipientAddr == "" {
-			recipientAddr = cfg.TestServer.IMAPUser
+		recipientExt := ext.MailAddress
+		if recipientExt == "" {
+			recipientExt = ext.IMAPUser
+		}
+		recipientTestserver := cfg.TestServer.MailAddress
+		if recipientTestserver == "" {
+			recipientTestserver = cfg.TestServer.IMAPUser
 		}
 
-		result := MailTestResult{From: ext.Name, To: cfg.TestServer.Name}
-		err := SendTestMail(ext, recipientAddr, subject, body)
-		if err != nil {
-			result.Success = false
-			result.Error = fmt.Sprintf("Fehler beim Senden: %v", err)
-			MailTestResults = append(MailTestResults, result)
-			continue
-		}
-		fmt.Println("Mail versendet, warte auf Zustellung...")
-		time.Sleep(10 * time.Second)
-		_, err = FetchAndCleanTestMails(cfg.TestServer, subject)
-		elapsed := time.Since(start)
-		result.Duration = elapsed.Seconds()
-		if err != nil {
-			result.Success = false
-			result.Error = fmt.Sprintf("Fehler beim Abrufen: %v", err)
-		} else {
-			result.Success = true
-		}
-		MailTestResults = append(MailTestResults, result)
-		fmt.Printf("Mail von %s an %s angekommen nach %s\n", ext.Name, cfg.TestServer.Name, elapsed)
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			runSingleTest(cfg.TestServer, ext, cfg.TestServer.Name, ext.Name, recipientExt, timeout, poll)
+		}()
+		go func() {
+			defer wg.Done()
+			runSingleTest(ext, cfg.TestServer, ext.Name, cfg.TestServer.Name, recipientTestserver, timeout, poll)
+		}()
 	}
+	wg.Wait()
 	return nil
 }
